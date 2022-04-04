@@ -10,6 +10,7 @@
   "author": "Dragos Rotaru",
   "license": "ISC",
   "dependencies": {
-    "puppeteer": "^13.5.2"
+    "puppeteer": "13.5.2",
+    "axios": "0.26.1"
   }
 }
