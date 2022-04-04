@@ -1,4 +1,5 @@
 import puppeteer from "puppeteer";
+import { scrapeInnerTextHOF } from "./common.js";
 
 // Select Search Filters and Show Results
 const selectSearchFilters = async (page, navigationPromise) => {
@@ -34,13 +35,9 @@ const setMaxResultsPerPage = async (page, navigationPromise) => {
 
 // Get the Total Number of Results Available
 const getTotalNumResults = async (page) => {
-    await page.waitForSelector('.panel > .panel-body > .col-np-12 > .col-np-7 > .prevNext')
-    // TODO get text
-    /* 
-    <div class="prevNext">Results per page: <a>10</a>&nbsp; 25 &nbsp;&nbsp; (1- 25  of 1094)</div>
-    */
-    await page.click('.panel > .panel-body > .col-np-12 > .col-np-7 > .prevNext')  
-    return 1094;
+    const scrapeInnerText = scrapeInnerTextHOF(page);
+    const text = await scrapeInnerText('.panel > .panel-body > .col-np-12 > .col-np-7 > .prevNext');
+    return Number(text.slice(text.indexOf("of ")).replace(",", "").replace(")", "").replace("of", "").trim());
 };
 
 // Next Page
@@ -55,11 +52,8 @@ const navigateToItem = async (index, page, navigationPromise) => {
     await page.waitForSelector(`tr:nth-child(${index}) > .width75 > .col-np-12 > .novisit > a`);
     await page.click(`tr:nth-child(${index}) > .width75 > .col-np-12 > .novisit > a`);
     await navigationPromise;
-    await navigationPromise;   
 };
 
-
-const scrapeInnerTextHOF = (page) => async (selector) => page.evaluate(e => e.textContent, await page.waitForSelector(selector));
 
 const scrapeItem = async (page) => {
 
@@ -140,9 +134,16 @@ export const scrape = async (numPagesOverride) => {
         const numResults = await getTotalNumResults(page);
         const numPages = numPagesOverride ? numPagesOverride : Math.ceil(numResults / MAX_RESULTS_PER_PAGE);
 
+        console.log(`Scraping GCSurplus with:\n
+        results per page: ${MAX_RESULTS_PER_PAGE}\n
+        number of results: ${numResults}\n
+        number of pages: ${numPages}\n
+        page override: ${numPagesOverride}\n
+        `);
+
         // Iteration
         for (let pageIndex = 1; pageIndex <= numPages ; pageIndex++) {
-            for (let itemIndex = 1; itemIndex <= 25; itemIndex++) {
+            for (let itemIndex = 1; itemIndex <= MAX_RESULTS_PER_PAGE; itemIndex++) {
                 await navigateToItem(itemIndex, page,navigationPromise);
                 const item = await scrapeItem(page);
                 data.push(item);

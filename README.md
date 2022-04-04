@@ -6,11 +6,8 @@ if one were to provide DealScout with a wishlist of items, it would theoreticall
 
 - GC Surplus
 - Bunz
-
-## Support in progress
-
 - Kijiji
-- Facebook Marketplace
+- Facebook Marketplace (under development)
 
 
 ## Copyright
