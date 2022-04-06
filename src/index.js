@@ -1,21 +1,26 @@
-import { scrape as bunz } from "./bunz.js";
-import { scrape as gcsurplus } from "./gcsurplus.js";
-import { scrape as kijiji } from "./kijiji.js";
+import puppeteer from "puppeteer";
+import { gcsurplus, bunz, kijiji, fbMarketplace } from "./scrapers";
 
 const keywords = ["subwoofer"];
 
 const data = {
     bunz: [],
     gc: [],
-    kijiji: []
+    kijiji: [],
+    fbMarketplace: []
 };
 
 const scrape = async () => {
-    const iterations = 2;
-    data.gc = await gcsurplus(iterations);
-    data.bunz = await bunz(iterations);
-    // TODO iterate over keywords
-    data.kijiji = await kijiji(iterations, keywords[0]);
+    const browser = await puppeteer.launch({ headless: false });
+
+    const searchTerm = "subwoofer";
+    const numPagesOverride = 2;
+    const numResultsOverride = 40;
+
+    data.gc = await gcsurplus(browser)(numPagesOverride);
+    data.bunz = await bunz(numPagesOverride);
+    data.kijiji = await kijiji(browser)(searchTerm, numPagesOverride);
+    data.fbMarketplace = await fbMarketplace(browser)(searchTerm, numResultsOverride);
 };
 
 const filter = async () => {
@@ -27,7 +32,9 @@ const filter = async () => {
                 data.name.indexOf(keyword) > -1 || data.isolessDescription.indexOf(keyword) > -1 );
         const kijiji = data.gc.filter(data => 
                 data.title.indexOf(keyword) > -1 || data.description.indexOf(keyword) > -1 );
-        results.push(...gc, ...bunz, ...kijiji);
+        const fbMarketplace = data.gc.filter(data => 
+            data.title.indexOf(keyword) > -1 || data.description.indexOf(keyword) > -1 );
+        results.push(...gc, ...bunz, ...kijiji, ...fbMarketplace);
     });
     return results;
 };

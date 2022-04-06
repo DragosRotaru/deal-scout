@@ -7,8 +7,22 @@ if one were to provide DealScout with a wishlist of items, it would theoreticall
 - GC Surplus
 - Bunz
 - Kijiji
-- Facebook Marketplace (under development)
+- Facebook Marketplace
 
+## TODOs
+
+- check if the scrapers work
+- fail gracefully at the result level
+- write an adaptive recurring scrape job
+    - stop when you reach items already scraped
+    - monitor frequency of new posts for each wishlist search
+- test by creating posts with known data
+- deal with long descriptions on FB
+- deal with long descriptions on Kijiji
+- filter results by checking city distance from LATITUDE and LONGITUDE
+- translate descriptions
+- add persistance: results, wishlist, scoring models
+- add alerts and labeling input from user
 
 ## Copyright
 

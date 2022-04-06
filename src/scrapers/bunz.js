@@ -1,4 +1,6 @@
-const sleep = ms => new Promise(r => setTimeout(r, ms));
+import { sleep } from "../utils";
+
+const MAX_RESULTS_PER_PAGE = 30;
 
 const requestData = async (cursor, timesLoaded) => {
     const response = await axios({
@@ -8,11 +10,11 @@ const requestData = async (cursor, timesLoaded) => {
             filterKeyword:  "everyone",
             sort:           "created",
             acceptsBtz:     false, // true?
-            limit:          30,
+            limit:          MAX_RESULTS_PER_PAGE,
             distanceKM:     20,
             uuid:           process.ENV.BUNZ_UUID,
             cursor:         cursor,
-            coords:         [process.ENV.LAT,process.ENV.LNG],
+            coords:         [process.ENV.LATITUDE,process.ENV.LONGITUDE],
             timesLoaded: timesLoaded
         },
         headers: {
@@ -38,25 +40,40 @@ const requestData = async (cursor, timesLoaded) => {
       return response.data;
 }
 
-const scrape = async (numPagesOverride) => {
-    const data = [];
-    const timesLoaded = 0;
-
+export const scrape = async numPagesOverride => {
+    // Data
+    const results = [];
     try {
+        // Initial State
         let response = await requestData("initial", timesLoaded);
-        data.push(...response.items);
-    
+        results.push(...response.items);
+        
+        // Pagination
+        const timesLoaded = 0;
+        const numResults = response.count;
+        const numPages = Math.ceil(numResults / MAX_RESULTS_PER_PAGE);
+
+        console.log(`Scraping Bunz with:\n
+        results per page: ${MAX_RESULTS_PER_PAGE}\n
+        number of results: ${numResults}\n
+        number of pages: ${numPages}\n
+        page override: ${numPagesOverride}\n
+        `);
+
+        // Iteration
         while (response.isMore && response.error === 0 && (!numPagesOverride || timesLoaded < numPagesOverride)) {
             console.log(timesLoaded, response.isMore, response.error, response.cursor);
             sleep(500);
             timesLoaded++;
             const response = await requestData(response.cursor, timesLoaded);
-            data.push(...response.items);
+            results.push(...response.items);
         }
     
-        return data;   
+        // Return and close
+        return results;
+
     } catch (error) {
         console.log(error.message);
-        return data; 
+        return results; 
     }
 }
