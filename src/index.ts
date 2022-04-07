@@ -37,12 +37,12 @@ const scrape = async () => {
         bunz: {
             lastSearchedAt: "",
             frequency: 1,
-            resultLimit: 2000
+            resultLimit: 100
         },
         gcsurplus: {
             lastSearchedAt: "",
             frequency: 1,
-            resultLimit: 2000
+            resultLimit: 100
         }
     };
 

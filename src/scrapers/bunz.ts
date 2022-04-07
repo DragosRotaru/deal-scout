@@ -62,12 +62,12 @@ const insertIntoDB = (db: Client) => async (response: any): Promise<void> => {
             ) Values($1, $2, $3, $4, $5, $6, $7)  ON CONFLICT (id) DO NOTHING`, [
             result._id,
             result.slug,
-            result.title,
+            result.name,
             result.created,
             new Date().toISOString(),
             `${result.location[0]},${result.location[1]}`,
             result.description,
-        ])
+        ]);
     }
 }
 
@@ -89,7 +89,7 @@ export const scrape = (db: Client) => async (settings: ScraperSettings): Promise
             return;
         }
 
-        await insertIntoDB(response);
+        await insertIntoDB(db)(response);
         
         // Pagination
         const numResults: number = response.count;
@@ -112,8 +112,8 @@ export const scrape = (db: Client) => async (settings: ScraperSettings): Promise
             timesLoaded++;
             resultCount =+ response.items.length;
             
-            console.log(timesLoaded, resultCount, response.isMore, response.error, response.cursor);
-            await insertIntoDB(response);
+            console.log(`Times Loaded: ${timesLoaded}, Result Count: ${resultCount}, Response.isMore: ${response.isMore}, Response.error: ${response.error}, Response.cursor: ${response.cursor}`);
+            await insertIntoDB(db)(response);
         }
         settings.lastSearchedAt = new Date().toISOString();
         // TODO persist settings
