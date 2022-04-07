@@ -64,7 +64,7 @@ CREATE TABLE searches (
     kijijiFrequency                 integer DEFAULT 1,
     kijijiLastSearchedAt            timestamp with time zone,
     fbmarketplaceFrequency          integer DEFAULT 1,
-    fbmarketplaceLastSearchedAt     timestamp with time zone,
+    fbmarketplaceLastSearchedAt     timestamp with time zone
 );
 
 
@@ -74,26 +74,26 @@ CREATE TABLE searches (
 CREATE TABLE searches_kijiji_results ( 
     searchId    int REFERENCES searches (id) ON UPDATE CASCADE ON DELETE CASCADE,
     resultId    text REFERENCES kijiji_results (id) ON UPDATE CASCADE,
-    CONSTRAINT  searches_results_pkey PRIMARY KEY (searchId, resultId)  -- explicit pk
+    CONSTRAINT  searches_kijiji_results_pkey PRIMARY KEY (searchId, resultId)  -- explicit pk
 );
 
 
 CREATE TABLE searches_bunz_results ( 
     searchId    int REFERENCES searches (id) ON UPDATE CASCADE ON DELETE CASCADE,
     resultId    text REFERENCES bunz_results (id) ON UPDATE CASCADE,
-    CONSTRAINT  searches_results_pkey PRIMARY KEY (searchId, resultId)  -- explicit pk
+    CONSTRAINT  searches_bunz_results_pkey PRIMARY KEY (searchId, resultId)  -- explicit pk
 );
 
 
 CREATE TABLE searches_gcsurplus_results ( 
     searchId    int REFERENCES searches (id) ON UPDATE CASCADE ON DELETE CASCADE,
     resultId    text REFERENCES gcsurplus_results (id) ON UPDATE CASCADE,
-    CONSTRAINT  searches_results_pkey PRIMARY KEY (searchId, resultId)  -- explicit pk
+    CONSTRAINT  searches_gcsurplus_results_pkey PRIMARY KEY (searchId, resultId)  -- explicit pk
 );
 
 
 CREATE TABLE searches_fbmarketplace_results ( 
     searchId    int REFERENCES searches (id) ON UPDATE CASCADE ON DELETE CASCADE,
     resultId    text REFERENCES fbmarketplace_results (id) ON UPDATE CASCADE,
-    CONSTRAINT  searches_results_pkey PRIMARY KEY (searchId, resultId)  -- explicit pk
+    CONSTRAINT  searches_fb_marketplace_results_pkey PRIMARY KEY (searchId, resultId)  -- explicit pk
 );
