@@ -64,14 +64,14 @@ normedTravelBudgetDelta: [0,1] where higher is better
 
 */
 
-const preProcess = results => results
-    .filter(r => r.search(search.term)) // filter out by search term
-    .filter(r => r.searchAnyOf(search.keywords[0]) && r.searchAnyOf(search.keywords[1])) // filter out by keywords
-    .map(r => ({ ...r, priceInRange: r.price > search.expectedPrice.lower && r.price < search.expectedPrice.upper ? 1 : 0 })) // price is in expected range
-    .map(r => ({ ...r, budgetDelta: -1 * (r.price - search.budget) })) // price distance from budget
-    .map(r => ({ ...r, travelBudgetDelta: -1 * (r.distance - search.travelBudget) })) // travel distance distance from travel budget
-    .map(r => ({ ...r, timeInSearch: (r.foundAt - search.startedAt) / search.patience })); // % of the way through the search
+const preProcess = (results: any) => results
+    .filter((r: any) => r.search(search.term)) // filter out by search term
+    .filter((r: any) => r.searchAnyOf(search.keywords[0]) && r.searchAnyOf(search.keywords[1])) // filter out by keywords
+    .map((r: any) => ({ ...r, priceInRange: r.price > search.expectedPrice.lower && r.price < search.expectedPrice.upper ? 1 : 0 })) // price is in expected range
+    .map((r: any) => ({ ...r, budgetDelta: -1 * (r.price - search.budget) })) // price distance from budget
+    .map((r: any) => ({ ...r, travelBudgetDelta: -1 * (r.distance - search.travelBudget) })) // travel distance distance from travel budget
+    .map((r: any) => ({ ...r, timeInSearch: (r.foundAt - search.startedAt) / search.patience })); // % of the way through the search
 
 
-const normalize = results => results
-    .map(r => ({ ...r, normedPriceInRange: r.priceInRange / results.filter(r => r.priceInRange === 1).length })) // how exceptional is it that it is in range?
+const normalize = (results: any) => results
+    .map((r: any) => ({ ...r, normedPriceInRange: r.priceInRange / results.filter((r: any) => r.priceInRange === 1).length })) // how exceptional is it that it is in range?

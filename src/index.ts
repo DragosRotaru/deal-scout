@@ -1,8 +1,7 @@
 import puppeteer from "puppeteer";
-import Client from 'pg';
+import { Client } from 'pg';
 import { MILLISECONDS_PER_DAY, MILLISECONDS_PER_HOUR } from "./utils";
 import { gcsurplus, bunz, kijiji, fbMarketplace } from "./scrapers";
-import { ScraperSettings } from "./types";
 
 
 const scrape = async () => {
@@ -11,8 +10,8 @@ const scrape = async () => {
     await client.connect();
 
     const searches = await client.query("SELECT * FROM searches");
-    for (let searchIndex = 0; searchIndex < searches.length; searchIndex++) {
-        const search = searches[searchIndex];
+    for (let searchIndex = 0; searchIndex < searches.rowCount; searchIndex++) {
+        const search = searches.rows[searchIndex];
         const createdAt = new Date(search.createdAt).getTime();
         const dueDate = new Date().setTime(createdAt + (search.timeLimit * MILLISECONDS_PER_DAY));
         const now = new Date().getTime();
@@ -34,7 +33,7 @@ const scrape = async () => {
     }
 
     const now = new Date().getTime();
-    const settings: { [key: string]: ScraperSettings } = {
+    const settings = {
         bunz: {
             lastSearchedAt: "",
             frequency: 1,

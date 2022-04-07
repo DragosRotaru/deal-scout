@@ -1,16 +1,20 @@
-const MAX_RESULTS_PER_PAGE = 0;
+import { Client } from "pg";
+import { Browser, Page } from "puppeteer";
+import { Search } from "../types";
+
+const MAX_RESULTS_PER_PAGE: number = 0;
 
 type Result = {
     id: string;
 };
 
-const navigateToResults = page => async () => {};
+const navigateToResults = (page: Page) => async (): Promise<void> => {};
 
-const getNumResults = async (page): Promise<number> => 0;
+const getNumResults = async (page: Page): Promise<number> => 0;
 
-const scrapeResult = page => async (): Promise<Result> => ({ id : "string" });
+const scrapeResult = (page: Page) => async (): Promise<Result> => ({ id : "string" });
 
-export const scrape = (browser, db) => async search => {
+export const scrape = (browser: Browser, db: Client) => async (search: Search): Promise<void> => {
     try {
         // Puppeteer
         const page = await browser.newPage();

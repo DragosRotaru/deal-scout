@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node -r dotenv/config dist/index.js",
-    "build": "tsc src/index.js --config tsconfig.json"
+    "build": "tsc"
   },
   "author": "Dragos Rotaru",
   "license": "ISC",
@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "@types/node": "17.0.23",
+    "@types/pg": "8.6.5",
     "dotenv": "^16.0.0",
     "typescript": "4.6.3"
   }

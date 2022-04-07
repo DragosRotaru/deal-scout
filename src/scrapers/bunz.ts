@@ -17,35 +17,35 @@ const MAX_RESULTS_PER_PAGE: number = 30;
 const SLEEP_TIME: number = 500;
 
 const requestResults = async (cursor: string, timesLoaded: number): Promise<any> => (await axios({
-    method: 'post',
+    method: "POST",
     url: "https://api.bunz.com/1.0/search/items/find",
     data: {
         filterKeyword:  "everyone",
         sort:           "created",
         acceptsBtz:     false, // true?
         limit:          MAX_RESULTS_PER_PAGE,
-        distanceKM:     process.env.DEALSCOUT_DISTANCE,
-        uuid:           process.env.DEALSCOUT_BUNZ_UUID,
+        distanceKM:     process.env['DEALSCOUT_DISTANCE'],
+        uuid:           process.env['DEALSCOUT_BUNZ_UUID'],
         cursor:         cursor,
-        coords:         [process.env.DEALSCOUT_LATITUDE, process.env.DEALSCOUT_LONGITUDE],
+        coords:         [process.env['DEALSCOUT_LATITUDE'], process.env['DEALSCOUT_LONGITUDE']],
         timesLoaded: timesLoaded
     },
     headers: {
-        "User-Agent": process.env.DEALSCOUT_USER_AGENT,
+        "User-Agent": process.env['DEALSCOUT_USER_AGENT'] || "",
         "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
         "Accept-Encoding": "gzip, deflate, br",
         "Referer": "https://bunz.com/",
         "Content-Type": "application/json",
         "Bunz-Version": "v3.12.25",
         "Origin": "https://bunz.com",
-        "DNT": 1,
+        "DNT": "1",
         "Connection": "keep-alive",
-        "Cookie": process.env.DEALSCOUT_BUNZ_COOKIE,
+        "Cookie": process.env['DEALSCOUT_BUNZ_COOKIE'] || "",
         "Sec-Fetch-Dest": "empty",
         "Sec-Fetch-Mode": "cors",
         "Sec-Fetch-Site": "same-site"
     },
-    validateStatus: null
+    validateStatus: () => true
     })).data;
 
 const insertIntoDB = (db: Client) => async (response: any): Promise<void> => {
@@ -73,7 +73,8 @@ const insertIntoDB = (db: Client) => async (response: any): Promise<void> => {
 
 export const scrape = (db: Client) => async (settings: ScraperSettings): Promise<void> => {
     try {
-        let timesLoaded: number, resultCount: number = 0;
+        let timesLoaded: number = 0;
+        let resultCount: number = 0;
         
         let response = await requestResults("initial", timesLoaded);
         resultCount = response.items.length;

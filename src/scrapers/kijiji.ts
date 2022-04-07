@@ -1,7 +1,7 @@
 import { Client } from "pg";
-import { Browser, Page } from "puppeteer";
+import { Browser, HTTPResponse, Page } from "puppeteer";
 import { Search } from "../types";
-import { scrapeInnerTextHOF } from "../utils";
+import { scrapeInnerTextHOF, stripURLParams } from "../utils";
 
 type Result = {
     id: string,
@@ -19,26 +19,26 @@ type Result = {
 const MAX_RESULTS_PER_PAGE = 40;
 
 // Get to Results Page via URL
-const navigateToResults = page => async (searchTerm, region, category, code) => {
+const navigateToResults = (page: Page) => async (searchTerm: string, region: string, category: string, code: string): Promise<void> => {
     const encodedSearchTerm = encodeURIComponent(searchTerm.replace(" ", "-"));
-    await page.goto(`https://www.kijiji.ca/${category}/${region}/${encodedSearchTerm}/${code}?ll=${process.env.DEALSCOUT_LATITUDE}%2C${process.env.DEALSCOUT_LONGITUDE}&radius=${process.env.DEALSCOUT_DISTANCE}&dc=true`)
+    await page.goto(`https://www.kijiji.ca/${category}/${region}/${encodedSearchTerm}/${code}?ll=${process.env['DEALSCOUT_LATITUDE']}%2C${process.env['DEALSCOUT_LONGITUDE']}&radius=${process.env['DEALSCOUT_DISTANCE']}&dc=true`)
     await page.setViewport({ width: 1680, height: 971 });
 };
 
-const navigateToNextPage = async (page, navigationPromise) => {
+const navigateToNextPage = async (page: Page, navigationPromise: Promise<HTTPResponse | null>): Promise<void> => {
     await page.waitForSelector('main > .container-results > .bottom-bar > .pagination > a:nth-child(13)');
     await page.click('main > .container-results > .bottom-bar > .pagination > a:nth-child(13)');
     await navigationPromise;
 }
 
-const getNumResults = async page => {
+const getNumResults = async (page: Page): Promise<number> => {
     const scrapeInnerText = scrapeInnerTextHOF(page);
     const text = await scrapeInnerText('.titlecount')
     return parseInt(text.trim().replace(",", "").replace("(", "").replace(")", ""));
 }
 
 
-const scrapeResult = page => async (index: number): Promise<Result> => {
+const scrapeResult = (page: Page) => async (index: number): Promise<Result> => {
     const result: Partial<Result> = {};
     let text;
 
@@ -47,9 +47,10 @@ const scrapeResult = page => async (index: number): Promise<Result> => {
     result.scrapedAt = new Date().toISOString();
 
     // URL
-    result.url = (await page.evaluate(e => e.href, await page.waitForSelector(`.search-item:nth-child(${index}) > .clearfix > .info > .info-container > .title > a`))).split(["?"])[0];
+    const url = stripURLParams(await page.evaluate(e => e.href, await page.waitForSelector(`.search-item:nth-child(${index}) > .clearfix > .info > .info-container > .title > a`)));
+    result.url = url;
 
-    result.id = result.url.slice(result.url.lastIndexOf("/"));
+    result.id = url.slice(url.lastIndexOf("/"));
 
     // Title
     text = await scrapeInnerText(`.search-item:nth-child(${index}) > .clearfix > .info > .info-container > .title`);
@@ -77,9 +78,11 @@ const scrapeResult = page => async (index: number): Promise<Result> => {
     
     // Description
     text = await scrapeInnerText(`.search-item:nth-child(${index}) > .clearfix > .info > .info-container > .description`);
-    result.description = text.trim();
+    const description = text.trim();
 
-    result.hasMoreInfo = result.description.slice(-3) === "...";
+    result.description = description;
+
+    result.hasMoreInfo = description.slice(-3) === "...";
     
     return result as Result;
 }
@@ -91,10 +94,12 @@ export const scrape = (browser: Browser, db: Client) => async (search: Search): 
         const navigationPromise = page.waitForNavigation();
 
         // Env Variables
-        const region = process.env.DEALSCOUT_KIJIJI_REGION;
-        const code = process.env.DEALSCOUT_KIJIJI_CODE;
-        const category = process.env.DEALSCOUT_KIJIJI_CATEGORY;
+        const region = process.env['DEALSCOUT_KIJIJI_REGION'];
+        const code = process.env['DEALSCOUT_KIJIJI_CODE'];
+        const category = process.env['DEALSCOUT_KIJIJI_CATEGORY'];
 
+        if (!region || !code || !category ) throw new Error("environment variables missing");
+    
         // Initial State
         await navigateToResults(page)(search.term, region, category, code);
 

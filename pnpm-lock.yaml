@@ -2,6 +2,7 @@ lockfileVersion: 5.3
 
 specifiers:
   '@types/node': 17.0.23
+  '@types/pg': ^8.6.5
   axios: 0.26.1
   dotenv: ^16.0.0
   pg: 8.7.3
@@ -15,6 +16,7 @@ dependencies:
 
 devDependencies:
   '@types/node': 17.0.23
+  '@types/pg': 8.6.5
   dotenv: 16.0.0
   typescript: 4.6.3
 
@@ -22,6 +24,14 @@ packages:
 
   /@types/node/17.0.23:
     resolution: {integrity: sha512-UxDxWn7dl97rKVeVS61vErvw086aCYhDLyvRQZ5Rk65rZKepaFdm53GeqXaKBuOhED4e9uWq34IC3TdSdJJ2Gw==}
+
+  /@types/pg/8.6.5:
+    resolution: {integrity: sha512-tOkGtAqRVkHa/PVZicq67zuujI4Oorfglsr2IbKofDwBSysnaqSx7W1mDqFqdkGE6Fbgh+PZAl0r/BWON/mozw==}
+    dependencies:
+      '@types/node': 17.0.23
+      pg-protocol: 1.5.0
+      pg-types: 2.2.0
+    dev: true
 
   /@types/yauzl/2.9.2:
     resolution: {integrity: sha512-8uALY5LTvSuHgloDVUvWP3pIauILm+8/0pDMokuDYIoNsOkSwd5AiHBTSEJjKTDcZr5z8UpgOWZkxBF4iJftoA==}
@@ -302,7 +312,6 @@ packages:
   /pg-int8/1.0.1:
     resolution: {integrity: sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw==}
     engines: {node: '>=4.0.0'}
-    dev: false
 
   /pg-pool/3.5.1_pg@8.7.3:
     resolution: {integrity: sha512-6iCR0wVrro6OOHFsyavV+i6KYL4lVNyYAB9RD18w66xSzN+d8b66HiwuP30Gp1SH5O9T82fckkzsRjlrhD0ioQ==}
@@ -314,7 +323,6 @@ packages:
 
   /pg-protocol/1.5.0:
     resolution: {integrity: sha512-muRttij7H8TqRNu/DxrAJQITO4Ac7RmX3Klyr/9mJEOBeIpgnF8f9jAfRz5d3XwQZl5qBjF9gLsUtMPJE0vezQ==}
-    dev: false
 
   /pg-types/2.2.0:
     resolution: {integrity: sha512-qTAAlrEsl8s4OiEQY69wDvcMIdQN6wdz5ojQiOy6YRMuynxenON0O5oCpJI6lshc6scgAY8qvJ2On/p+CXY0GA==}
@@ -325,7 +333,6 @@ packages:
       postgres-bytea: 1.0.0
       postgres-date: 1.0.7
       postgres-interval: 1.2.0
-    dev: false
 
   /pg/8.7.3:
     resolution: {integrity: sha512-HPmH4GH4H3AOprDJOazoIcpI49XFsHCe8xlrjHkWiapdbHK+HLtbm/GQzXYAZwmPju/kzKhjaSfMACG+8cgJcw==}
@@ -361,24 +368,20 @@ packages:
   /postgres-array/2.0.0:
     resolution: {integrity: sha512-VpZrUqU5A69eQyW2c5CA1jtLecCsN2U/bD6VilrFDWq5+5UIEVO7nazS3TEcHf1zuPYO/sqGvUvW62g86RXZuA==}
     engines: {node: '>=4'}
-    dev: false
 
   /postgres-bytea/1.0.0:
     resolution: {integrity: sha1-AntTPAqokOJtFy1Hz5zOzFIazTU=}
     engines: {node: '>=0.10.0'}
-    dev: false
 
   /postgres-date/1.0.7:
     resolution: {integrity: sha512-suDmjLVQg78nMK2UZ454hAG+OAW+HQPZ6n++TNDUX+L0+uUlLywnoxJKDou51Zm+zTCjrCl0Nq6J9C5hP9vK/Q==}
     engines: {node: '>=0.10.0'}
-    dev: false
 
   /postgres-interval/1.2.0:
     resolution: {integrity: sha512-9ZhXKM/rw350N1ovuWHbGxnGh/SNJ4cnxHiM0rxE4VN41wsg8P8zWn9hv/buK00RP4WvlOyr/RBDiptyxVbkZQ==}
     engines: {node: '>=0.10.0'}
     dependencies:
       xtend: 4.0.2
-    dev: false
 
   /progress/2.0.3:
     resolution: {integrity: sha512-7PiHtLll5LdnKIMw100I+8xJXR5gW2QwWYkT6iJva0bXitZKa/XMrSbdmg3r2Xnaidz9Qumd0VPaMrZlF9V9sA==}
@@ -527,7 +530,6 @@ packages:
   /xtend/4.0.2:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}
     engines: {node: '>=0.4'}
-    dev: false
 
   /yauzl/2.10.0:
     resolution: {integrity: sha1-x+sXyT4RLLEIb6bY5R+wZnt5pfk=}

@@ -1,4 +1,4 @@
-import { Browser, Page } from "puppeteer";
+import { Browser, HTTPResponse, Page } from "puppeteer";
 import { Client } from "pg";
 import { Search } from "../types";
 import { 
@@ -34,7 +34,7 @@ const navigateToResults = (page: Page) => async (searchTerm: string): Promise<vo
 };
 
 const getResultLinks = async (page: Page): Promise<string[]> => {
-    const links = await page.$$eval('a', as => as.map(a => a.href));
+    const links = await page.$$eval('a', as => as.map((a: any) => a.href));
     return links.filter(link => link.indexOf(ITEM_BASE_URL) === 0 );
 };
 
@@ -44,7 +44,7 @@ const scrollDown = (page: Page): Promise<void> => page.evaluate(_ => window.scro
 
 const parsePrice = (text: string): number => parseFloat(text.replace("$", "").replace(",", "").replace("C", "").trim());
 
-const scrapeResult = (page: Page, navigationPromise) => async (url: string): Promise<Result> => {
+const scrapeResult = (page: Page, navigationPromise: Promise<HTTPResponse | null>) => async (url: string): Promise<Result> => {
     const result: Partial<Result> = {};
     let text: string;
 
@@ -128,8 +128,10 @@ export const scrape = (browser: Browser, db: Client) => async (search: Search): 
 
         // Infinite Scrolling
         let waitPeriod: number = 1000;
-        let noNewResultsCount: number, timesScrolled: number = 0;
-        let resultLinks, newResultLinks: string[] = [];
+        let noNewResultsCount: number = 0;
+        let timesScrolled: number = 0;
+        let resultLinks: string[] = []
+        let newResultLinks: string[] = [];
         
         const prevSearchResults = await db.query("SELECT * FROM searches_fbmarketplace_results WHERE searchId=$1", [search.id]);
 
@@ -159,7 +161,7 @@ export const scrape = (browser: Browser, db: Client) => async (search: Search): 
             if (noNewResultsCount >= 4 || waitPeriod > 30000) {
                 console.log(`infinite scroll limits reached, no new results: ${noNewResultsCount}, waitPeriod: ${waitPeriod}, results: ${resultLinks.length}`)
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("failed on indexing via infinite scroll");
             console.error(error.message);
         }

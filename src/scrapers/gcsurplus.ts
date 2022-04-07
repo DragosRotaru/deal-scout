@@ -1,5 +1,5 @@
 import { Client } from "pg";
-import { Browser, Page } from "puppeteer";
+import { Browser, HTTPResponse, Page } from "puppeteer";
 import { ScraperSettings } from "../types";
 import { scrapeInnerTextHOF } from "../utils";
 
@@ -24,7 +24,7 @@ type Result = {
 const MAX_RESULTS_PER_PAGE: number = 25;
 
 // Select Search Filters and Show Results
-const selectSearchFilters = async (page, navigationPromise): Promise<void> => {
+const selectSearchFilters = async (page: Page, navigationPromise: Promise<HTTPResponse | null>): Promise<void> => {
     await page.waitForSelector('#srchPanel > #dropdowns > .col-np-12 > #region > option');
     await page.click('#srchPanel > #dropdowns > .col-np-12 > #region > option');
     await page.select('#cmdty', '');
@@ -36,7 +36,7 @@ const selectSearchFilters = async (page, navigationPromise): Promise<void> => {
 };
 
 // Get to Results Page via navigation
-const navigateToResultsComplex = async (page: Page, navigationPromise): Promise<void> => {
+const navigateToResultsComplex = async (page: Page, navigationPromise: Promise<HTTPResponse | null>): Promise<void> => {
     await page.goto('https://gcsurplus.ca/mn-eng.cfm?snc=wfsav&vndsld=0');
     await page.setViewport({ width: 1680, height: 971 });
     await selectSearchFilters(page, navigationPromise);
@@ -49,7 +49,7 @@ const navigateToResults = async (page: Page): Promise<void> => {
 };
 
 // Set maximum number of results per page
-const setMaxResultsPerPage = async (page: Page, navigationPromise): Promise<void> => {
+const setMaxResultsPerPage = async (page: Page, navigationPromise: Promise<HTTPResponse | null>): Promise<void> => {
     await page.waitForSelector('.panel-body > .col-np-12 > .col-np-7 > .prevNext > a');
     await page.click('.panel-body > .col-np-12 > .col-np-7 > .prevNext > a');
     await navigationPromise;
@@ -63,14 +63,14 @@ const getNumResults = async (page: Page): Promise<number> => {
 };
 
 // Next Page
-const navigateToNextPage = async (page: Page, navigationPromise): Promise<void> => {
+const navigateToNextPage = async (page: Page, navigationPromise: Promise<HTTPResponse | null>): Promise<void> => {
     await page.waitForSelector('.col-np-12 > #bottomPrevNext > .pager > .next > a');
     await page.click('.col-np-12 > #bottomPrevNext > .pager > .next > a');
     await navigationPromise;
 };
 
 // Navigate to Each Result
-const navigateToResult = (page: Page, navigationPromise) => async (index: number): Promise<void> => {
+const navigateToResult = (page: Page, navigationPromise: Promise<HTTPResponse | null>) => async (index: number): Promise<void> => {
     await page.waitForSelector(`tr:nth-child(${index}) > .width75 > .col-np-12 > .novisit > a`);
     await page.click(`tr:nth-child(${index}) > .width75 > .col-np-12 > .novisit > a`);
     await navigationPromise;
