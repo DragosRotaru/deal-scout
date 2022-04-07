@@ -1,8 +1,3 @@
-CREATE DATABASE dealscout;
-GRANT ALL PRIVILEGES ON dealscout.* to 'dealscout'@'localhost' WITH GRANT OPTION;
-FLUSH PRIVILEGES;
-USE dealscout;
-
 /* Result Tables */
 
 CREATE TABLE kijiji_results (

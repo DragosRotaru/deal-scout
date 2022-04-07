@@ -1,0 +1,3 @@
+CREATE DATABASE dealscout;
+CREATE USER dealscout;
+GRANT ALL PRIVILEGES ON DATABASE dealscout TO dealscout;
