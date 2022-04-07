@@ -13,5 +13,9 @@
     "puppeteer": "13.5.2",
     "axios": "0.26.1",
     "pg": "8.7.3"
+  },
+  "devDependencies": {
+    "typescript": "4.6.3",
+    "@types/node": "17.0.23"
   }
 }
