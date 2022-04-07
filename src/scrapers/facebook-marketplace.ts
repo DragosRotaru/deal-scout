@@ -42,7 +42,7 @@ const filterResultLinks = (links: string[]): string[] => filterUnique(links.map(
 
 const scrollDown = (page: Page): Promise<void> => page.evaluate(_ => window.scrollBy(VIEWPORT_HEIGHT, window.innerHeight));
 
-const parsePrice = (text: string): number => parseFloat(text.replace("$", "").replace(",", "").replace("C", "").trim());
+const parsePrice = (text: string): number => Math.round(parseFloat(text.replace("$", "").replace(",", "").replace("C", "").trim()));
 
 const scrapeResult = (page: Page, navigationPromise: Promise<HTTPResponse | null>) => async (url: string): Promise<Result> => {
     const result: Partial<Result> = {};
@@ -144,7 +144,7 @@ export const scrape = (browser: Browser, db: Client) => async (search: Search): 
                     await sleep(waitPeriod);
                     newResultLinks = await getResultLinks(page);
                     if (newResultLinks.length === resultLinks.length) {
-                        waitPeriod =+ 200;
+                        waitPeriod += 200;
                         noNewResultsCount++;
                     };
                 };

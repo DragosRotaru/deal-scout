@@ -82,6 +82,8 @@ const scrapeResult = async (page: Page): Promise<Result> => {
     const result: Partial<Result> = {};
     let text;
 
+    result.scrapedAt = new Date().toISOString();
+
     const scrapeInnerText = scrapeInnerTextHOF(page);
 
     // Title
@@ -90,15 +92,18 @@ const scrapeResult = async (page: Page): Promise<Result> => {
 
     // Current Bid
     text = await scrapeInnerText('#currentBid');
-    result.oldPrice = parseFloat(text.trim().replace("$", "").replace(",", ""));
+    result.oldPrice = Math.round(parseFloat(text.trim().replace("$", "").replace(",", "")));
 
     // Next Minimum Bid
     text = await scrapeInnerText('#openBidMin');
-    result.price = parseFloat(text.trim().replace("$", "").replace(",", "")); // 123.43    
+    result.price = Math.round(parseFloat(text.trim().replace("$", "").replace(",", ""))); // 123.43    
 
     // Bid Start Date
     text = await scrapeInnerText('#openBidDt');
     result.postedAt = text.trim(); // '4-April-2022 @ 02:11:00 pm EDT',
+    if (result.postedAt === "") {
+        result.postedAt = result.scrapedAt;
+    } // TODO handle bad fields
 
     // Closing Date
     text = await scrapeInnerText('#closingDateId');
@@ -121,11 +126,11 @@ const scrapeResult = async (page: Page): Promise<Result> => {
 
     // Location
     text = await scrapeInnerText(`#bidPanelId > .panel > .panel-body > .table-display > .short:nth-child(${12 + offset})`);
-    result.location = text.trim(); // 'Petawawa, ON'
+    result.location = text.trim().replace(/\s\s+/g, ' '); // 'Petawawa, ON'
 
     // Sale / Lot ID
     text = await scrapeInnerText(`#bidPanelId > .panel > .panel-body > .table-display > .short:nth-child(${14 + offset})`);
-    result.id = text; // 'R1OT0015488 - 1OT013965-W8B24-JB'
+    result.id = text.trim(); // 'R1OT0015488 - 1OT013965-W8B24-JB'
 
     return result as Result;
 };
@@ -177,14 +182,38 @@ export const scrape = (browser: Browser, db: Client) => async (settings: Scraper
                 try {
                     await navigateToResult(page,navigationPromise)(resultIndex);
                     const result = await scrapeResult(page);
-                    // TODO INSERT results
+                    console.log(result);
+                    await db.query(`INSERT into gcsurplus_results(
+                        id,
+                        title,
+                        price,
+                        oldPrice,
+                        quantity,
+                        postedAt,
+                        closingAt,
+                        scrapedAt,
+                        location,
+                        description
+                        ) Values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)  ON CONFLICT (id) DO NOTHING`, [
+                        result.id,
+                        result.title,
+                        result.price,
+                        result.oldPrice,
+                        result.quantity,
+                        result.postedAt,
+                        result.closingAt,
+                        result.scrapedAt,
+                        result.location,
+                        result.description
+                    ]);
 
-                    console.log(pageIndex, resultIndex, result.title);
+                    console.log(`Page Index: ${pageIndex}, Result Index: ${resultIndex}, Result Title: ${result.title}`);
                     resultCounter++;
                     await page.goBack();
                 } catch (error: any) {
                     console.error(`failed on page ${pageIndex}, result ${resultIndex}, resultCounter: ${resultCounter}`);
                     console.error(error.message);
+                    await page.goBack();
                 }
             }
             await navigateToNextPage(page, navigationPromise);

@@ -37,12 +37,12 @@ const scrape = async () => {
         bunz: {
             lastSearchedAt: "",
             frequency: 1,
-            resultLimit: 100
+            resultLimit: 0
         },
         gcsurplus: {
             lastSearchedAt: "",
             frequency: 1,
-            resultLimit: 100
+            resultLimit: 10
         }
     };
 
@@ -50,7 +50,7 @@ const scrape = async () => {
     if (now < new Date(settings.bunz.lastSearchedAt).getTime() + (settings.bunz.frequency * MILLISECONDS_PER_HOUR)) {
         console.log("skipping bunz");
     } else {
-        await bunz(client)(settings.bunz);
+        //await bunz(client)(settings.bunz);
     }
     if (now < new Date(settings.gcsurplus.lastSearchedAt).getTime() + (settings.gcsurplus.frequency * MILLISECONDS_PER_HOUR)) {
         console.log("skipping gc surplus");

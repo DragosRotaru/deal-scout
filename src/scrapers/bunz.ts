@@ -110,7 +110,7 @@ export const scrape = (db: Client) => async (settings: ScraperSettings): Promise
             response = await requestResults(response.cursor, timesLoaded);
             
             timesLoaded++;
-            resultCount =+ response.items.length;
+            resultCount += response.items.length;
             
             console.log(`Times Loaded: ${timesLoaded}, Result Count: ${resultCount}, Response.isMore: ${response.isMore}, Response.error: ${response.error}, Response.cursor: ${response.cursor}`);
             await insertIntoDB(db)(response);

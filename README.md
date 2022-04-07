@@ -10,7 +10,7 @@ if one were to provide DealScout with a wishlist of items, it would theoreticall
 - Facebook Marketplace
 
 ## TODOs
-
+- "Hobart L-800 Mixer and Related Accessories" - GCSurplus Example Broken
 - check if the scrapers work
 - fail gracefully at the result level
 - write an adaptive recurring scrape job
