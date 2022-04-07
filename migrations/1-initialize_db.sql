@@ -1,7 +1,7 @@
-CREATE DATABASE datascout;
-GRANT ALL ON datascout.* to 'datascout'@'localhost' WITH GRANT OPTION;
+CREATE DATABASE dealscout;
+GRANT ALL PRIVILEGES ON dealscout.* to 'dealscout'@'localhost' WITH GRANT OPTION;
 FLUSH PRIVILEGES;
-USE datascout;
+USE dealscout;
 
 /* Result Tables */
 
