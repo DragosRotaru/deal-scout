@@ -6,7 +6,7 @@ CREATE TABLE kijiji_results (
     title           text NOT NULL,
     price           integer NOT NULL,
     postedAt        timestamp with time zone NOT NULL,
-    scrapedAt       timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,,
+    scrapedAt       timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
     distance        text,
     location        text,
     description     text
@@ -17,7 +17,7 @@ CREATE TABLE bunz_results (
     url             text NOT NULL,
     title           text NOT NULL,
     postedAt        timestamp with time zone NOT NULL,
-    scrapedAt       timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,,
+    scrapedAt       timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
     location        text,
     description     text
 );
@@ -30,7 +30,7 @@ CREATE TABLE gcsurplus_results (
     quantity        integer,
     postedAt        timestamp with time zone NOT NULL,
     closingAt       timestamp with time zone NOT NULL,
-    scrapedAt       timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,,
+    scrapedAt       timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
     location        text,
     description     text
 );
@@ -42,7 +42,7 @@ CREATE TABLE fbmarketplace_results (
     price           integer NOT NULL,
     oldPrice        integer,
     postedAt        timestamp with time zone NOT NULL,
-    scrapedAt       timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,,
+    scrapedAt       timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
     location        text,
     condition       text,
     description     text
