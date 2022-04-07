@@ -182,8 +182,8 @@ export const scrape = (browser: Browser, db: Client) => async (settings: Scraper
                     console.log(pageIndex, resultIndex, result.title);
                     resultCounter++;
                     await page.goBack();
-                } catch (error) {
-                    console.error(`failed on page ${pageIndex}, result ${resultIndex}, resultCounter: ${resultCounter}, result id ${result.id}`);
+                } catch (error: any) {
+                    console.error(`failed on page ${pageIndex}, result ${resultIndex}, resultCounter: ${resultCounter}`);
                     console.error(error.message);
                 }
             }
@@ -193,7 +193,7 @@ export const scrape = (browser: Browser, db: Client) => async (settings: Scraper
         settings.lastSearchedAt = new Date().toISOString();
         // TODO persist setting
         await page.close();
-    } catch (error) {
+    } catch (error: any) {
         console.error(error.message);
     }
 }

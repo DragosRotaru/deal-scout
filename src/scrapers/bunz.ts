@@ -117,7 +117,7 @@ export const scrape = (db: Client) => async (settings: ScraperSettings): Promise
         }
         settings.lastSearchedAt = new Date().toISOString();
         // TODO persist settings
-    } catch (error) {
+    } catch (error: any) {
         console.error(error.message);
     }
 }

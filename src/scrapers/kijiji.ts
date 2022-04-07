@@ -155,7 +155,7 @@ export const scrape = (browser: Browser, db: Client) => async (search: Search): 
                     // TODO insert into searches_kijiji_results
 
                     console.log(pageIndex, resultIndex, result.title);
-                } catch (error) {
+                } catch (error: any) {
                     console.error(`failed on page ${pageIndex}, result ${resultIndex}`);
                     console.error(error.message);
                 }
@@ -164,7 +164,7 @@ export const scrape = (browser: Browser, db: Client) => async (search: Search): 
         };
         // TODO update kijijiLastSearchedAt
         await page.close();
-    } catch (error) {
+    } catch (error: any) {
         console.error(error.message);
     }
 };

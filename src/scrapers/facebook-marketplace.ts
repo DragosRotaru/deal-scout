@@ -170,10 +170,10 @@ export const scrape = (browser: Browser, db: Client) => async (search: Search): 
 
         for (let resultIndex = 0; resultIndex < resultLinks.length; resultIndex++) {
             try {
-                const result = await scrapeResult(page, navigationPromise)(resultLinks[resultIndex]);
+                const result = await scrapeResult(page, navigationPromise)(resultLinks[resultIndex] as string);
                 // TODO insert into fbmarketplace_results and searches_fbmarketplace_results
                 console.log(resultIndex, result.title);   
-            } catch (error) {
+            } catch (error: any) {
                 console.error(`failed on result ${resultIndex}`)
                 console.error(error.message);
             }
@@ -181,7 +181,7 @@ export const scrape = (browser: Browser, db: Client) => async (search: Search): 
 
         // TODO update fbmarketplaceLastSearchedAt
         await page.close();
-    } catch (error) {
+    } catch (error: any) {
         console.error(error.message);
     }
 };

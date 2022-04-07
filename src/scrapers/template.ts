@@ -57,7 +57,7 @@ export const scrape = (browser: Browser, db: Client) => async (search: Search): 
                     // TODO insert into searches_template_results
                     console.log(pageIndex, resultIndex);   
                     resultCounter++;
-                } catch (error) {
+                } catch (error: any) {
                     console.error(`failed on page ${pageIndex}, result ${resultIndex}`);
                     console.error(error.message);
                 }
@@ -66,7 +66,7 @@ export const scrape = (browser: Browser, db: Client) => async (search: Search): 
 
         // TODO update templateLastSearchedAt
         await page.close();
-    } catch (error) {
+    } catch (error: any) {
         console.error(error.message);
     }
 };
