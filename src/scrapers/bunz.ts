@@ -24,14 +24,14 @@ const requestResults = async (cursor: string, timesLoaded: number): Promise<any>
         sort:           "created",
         acceptsBtz:     false, // true?
         limit:          MAX_RESULTS_PER_PAGE,
-        distanceKM:     process.ENV.DEALSCOUT_DISTANCE,
-        uuid:           process.ENV.DEALSCOUT_BUNZ_UUID,
+        distanceKM:     process.env.DEALSCOUT_DISTANCE,
+        uuid:           process.env.DEALSCOUT_BUNZ_UUID,
         cursor:         cursor,
-        coords:         [process.ENV.DEALSCOUT_LATITUDE, process.ENV.DEALSCOUT_LONGITUDE],
+        coords:         [process.env.DEALSCOUT_LATITUDE, process.env.DEALSCOUT_LONGITUDE],
         timesLoaded: timesLoaded
     },
     headers: {
-        "User-Agent": process.ENV.DEALSCOUT_USER_AGENT,
+        "User-Agent": process.env.DEALSCOUT_USER_AGENT,
         "Accept-Language": "en-CA,en-US;q=0.7,en;q=0.3",
         "Accept-Encoding": "gzip, deflate, br",
         "Referer": "https://bunz.com/",
@@ -40,7 +40,7 @@ const requestResults = async (cursor: string, timesLoaded: number): Promise<any>
         "Origin": "https://bunz.com",
         "DNT": 1,
         "Connection": "keep-alive",
-        "Cookie": process.ENV.DEALSCOUT_BUNZ_COOKIE,
+        "Cookie": process.env.DEALSCOUT_BUNZ_COOKIE,
         "Sec-Fetch-Dest": "empty",
         "Sec-Fetch-Mode": "cors",
         "Sec-Fetch-Site": "same-site"

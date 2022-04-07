@@ -21,7 +21,7 @@ const MAX_RESULTS_PER_PAGE = 40;
 // Get to Results Page via URL
 const navigateToResults = page => async (searchTerm, region, category, code) => {
     const encodedSearchTerm = encodeURIComponent(searchTerm.replace(" ", "-"));
-    await page.goto(`https://www.kijiji.ca/${category}/${region}/${encodedSearchTerm}/${code}?ll=${process.ENV.DEALSCOUT_LATITUDE}%2C${process.ENV.DEALSCOUT_LONGITUDE}&radius=${process.ENV.DEALSCOUT_DISTANCE}&dc=true`)
+    await page.goto(`https://www.kijiji.ca/${category}/${region}/${encodedSearchTerm}/${code}?ll=${process.env.DEALSCOUT_LATITUDE}%2C${process.env.DEALSCOUT_LONGITUDE}&radius=${process.env.DEALSCOUT_DISTANCE}&dc=true`)
     await page.setViewport({ width: 1680, height: 971 });
 };
 
@@ -91,9 +91,9 @@ export const scrape = (browser: Browser, db: Client) => async (search: Search): 
         const navigationPromise = page.waitForNavigation();
 
         // Env Variables
-        const region = process.ENV.DEALSCOUT_KIJIJI_REGION;
-        const code = process.ENV.DEALSCOUT_KIJIJI_CODE;
-        const category = process.ENV.DEALSCOUT_KIJIJI_CATEGORY;
+        const region = process.env.DEALSCOUT_KIJIJI_REGION;
+        const code = process.env.DEALSCOUT_KIJIJI_CODE;
+        const category = process.env.DEALSCOUT_KIJIJI_CATEGORY;
 
         // Initial State
         await navigateToResults(page)(search.term, region, category, code);
