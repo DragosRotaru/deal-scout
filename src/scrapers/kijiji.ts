@@ -1,4 +1,20 @@
-import { scrapeInnerTextHOF } from "./common.js";
+import { Client } from "pg";
+import { Browser, Page } from "puppeteer";
+import { Search } from "../types";
+import { scrapeInnerTextHOF } from "../utils";
+
+type Result = {
+    id: string,
+    url: string,
+    scrapedAt: string, 
+    title: string,
+    price: number,
+    distance: string,
+    location: string,
+    postedAt: string
+    description: string,
+    hasMoreInfo: boolean,
+};
 
 const MAX_RESULTS_PER_PAGE = 40;
 
@@ -21,8 +37,9 @@ const getNumResults = async page => {
     return parseInt(text.trim().replace(",", "").replace("(", "").replace(")", ""));
 }
 
-const scrapeResult = page => async index => {
-    const result = {};
+
+const scrapeResult = page => async (index: number): Promise<Result> => {
+    const result: Partial<Result> = {};
     let text;
 
     const scrapeInnerText = scrapeInnerTextHOF(page);
@@ -60,14 +77,14 @@ const scrapeResult = page => async index => {
     
     // Description
     text = await scrapeInnerText(`.search-item:nth-child(${index}) > .clearfix > .info > .info-container > .description`);
-    result.desciption = text.trim();
+    result.description = text.trim();
 
-    result.hasMoreInfo = result.desciption.slice(-3) === "...";
+    result.hasMoreInfo = result.description.slice(-3) === "...";
     
-    return result;
+    return result as Result;
 }
 
-export const scrape = (browser, db) => async search => {
+export const scrape = (browser: Browser, db: Client) => async (search: Search): Promise<void> => {
     try {
         // Puppeteer
         const page = await browser.newPage();
@@ -120,15 +137,15 @@ export const scrape = (browser, db) => async search => {
                         location,
                         description
                         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) ON CONFLICT (id) DO NOTHING`,
-                    [   results.id,
-                        results.url,
-                        results.title,
-                        results.price,
-                        results.postedAt,
-                        results.scrapedAt,
-                        results.distance,
-                        results.location,
-                        results.desciption
+                    [   result.id,
+                        result.url,
+                        result.title,
+                        result.price,
+                        result.postedAt,
+                        result.scrapedAt,
+                        result.distance,
+                        result.location,
+                        result.description
                     ])
                     // TODO insert into searches_kijiji_results
 

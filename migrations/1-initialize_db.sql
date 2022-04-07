@@ -66,13 +66,8 @@ CREATE TABLE searches (
     upperPriceLimit                 integer NOT NULL,
     keywords                        text,
     resultLimit                     integer,
-    lastSearchedAt                  timestamp with time zone,
     kijijiFrequency                 integer DEFAULT 1,
     kijijiLastSearchedAt            timestamp with time zone,
-    bunzFrequency                   integer DEFAULT 1,
-    bunzLastSearchedAt              timestamp with time zone,
-    gcsurplusFrequency              integer DEFAULT 1,
-    gcsurplusLastSearchedAt         timestamp with time zone,
     fbmarketplaceFrequency          integer DEFAULT 1,
     fbmarketplaceLastSearchedAt     timestamp with time zone,
 );

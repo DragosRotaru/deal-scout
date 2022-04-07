@@ -1,26 +1,53 @@
-import { sleep, scrapeInnerTextHOF } from "../utils";
+import { Browser, Page } from "puppeteer";
+import { Client } from "pg";
+import { Search } from "../types";
+import { 
+    sleep,
+    scrapeInnerTextHOF,
+    MILLISECONDS_PER_MIN,
+    MILLISECONDS_PER_HOUR,
+    MILLISECONDS_PER_DAY,
+    stripURLParams,
+    filterUnique
+} from "../utils";
 
-const VIEWPORT_HEIGHT = 971;
+type Result = {
+    id: string,
+    url: string,
+    title: string,
+    price: number,
+    oldPrice: number,
+    postedAt: string,
+    scrapedAt: string,
+    location: string,
+    condition: string,
+    description: string,
+}
 
-const navigateToResults = page => async searchTerm => {
+const VIEWPORT_HEIGHT: number = 971;
+
+const ITEM_BASE_URL: string = "https://www.facebook.com/marketplace/item/";
+
+const navigateToResults = (page: Page) => async (searchTerm: string): Promise<void> => {
     await page.goto(`https://www.facebook.com/marketplace/category/search/?query=${encodeURIComponent(searchTerm)}`);
     await page.setViewport({ width: 1680, height: VIEWPORT_HEIGHT });
 };
 
-const getResultLinks = async page => {
+const getResultLinks = async (page: Page): Promise<string[]> => {
     const links = await page.$$eval('a', as => as.map(a => a.href));
-    const resultLinks = links.filter(link => indexOf("https://www.facebook.com/marketplace/item/") > -1 );
-    return resultLinks;
+    return links.filter(link => link.indexOf(ITEM_BASE_URL) === 0 );
 };
 
-// De-duplicate and strip parameters
-const filterResultLinks = links => [...new Set(links.map(link => link.split("?")[0]))];
+const filterResultLinks = (links: string[]): string[] => filterUnique(links.map(stripURLParams));
 
-const scrollDown = page => page.evaluate(_ => window.scrollBy(VIEWPORT_HEIGHT, window.innerHeight));
+const scrollDown = (page: Page): Promise<void> => page.evaluate(_ => window.scrollBy(VIEWPORT_HEIGHT, window.innerHeight));
 
-const scrapeResult = (page, navigationPromise) => async (url) => {
-    const result = {};
-    let text;
+const parsePrice = (text: string): number => parseFloat(text.replace("$", "").replace(",", "").replace("C", "").trim());
+
+const scrapeResult = (page: Page, navigationPromise) => async (url: string): Promise<Result> => {
+    const result: Partial<Result> = {};
+    let text: string;
+
     const scrapeInnerText = scrapeInnerTextHOF(page);
     await page.goto(url);
     await navigationPromise;
@@ -29,7 +56,7 @@ const scrapeResult = (page, navigationPromise) => async (url) => {
     result.url = url;
 
     // ID
-    result.id = url.replace("https://www.facebook.com/marketplace/item/", "").replace("/", "");
+    result.id = url.replace(ITEM_BASE_URL, "").replace("/", "");
 
     // Title
     text = await scrapeInnerText('.j83agx80 > div > .dati1w0a > div > .d2edcug0');
@@ -37,42 +64,38 @@ const scrapeResult = (page, navigationPromise) => async (url) => {
 
     // Price
     text = await scrapeInnerText('div > .dati1w0a > .aov4n071 > div > .d2edcug0 > span > span');
-    result.oldPrice = parseFloat(text.replace("$", "").replace(",", "").replace("C", "").trim());
+    result.oldPrice = parsePrice(text);
     
-    const priceText = await scrapeInnerText('div > .dati1w0a > .aov4n071 > div > .d2edcug0');
-    result.price = parseFloat(priceText.replace(text, "").replace("$", "").replace(",", "").replace("C", "").trim());
+    const priceText: string = await scrapeInnerText('div > .dati1w0a > .aov4n071 > div > .d2edcug0');
+    result.price = parsePrice(priceText.replace(text, ""));
 
     // Location
     text = await scrapeInnerText('.dati1w0a > .aov4n071 > .sjgh65i0 > div > .d2edcug0 > a');
     result.location = text.trim();
 
     // Listed At
-    const listedAtText = await scrapeInnerText('.dati1w0a > .aov4n071 > .sjgh65i0 > div > .d2edcug0');
-    const listedAtTrimmed = listedAtText.replace(text, "").replace("Listed").replace("in", "").replace("ago","").trim();
+    const listedAtText: string = await scrapeInnerText('.dati1w0a > .aov4n071 > .sjgh65i0 > div > .d2edcug0');
+    const listedAtTrimmed: string = listedAtText.replace(text, "").replace("Listed", "").replace("in", "").replace("ago","").trim();
     
-    let listedAtQuantity = listedAtTrimmed.indexOf("a ") === 0 || listedAtTrimmed.indexOf("an ") === 0 ? 1 : parseInt(listedAtTrimmed);
-    let dateOffset = 0;
-    
-    const miliSecsPerMin = 60 * 1000;
-    const miliSecsPerHour = 60 * miliSecsPerMin;
-    const miliSecsPerDay = 24 * miliSecsPerHour;
+    let listedAtQuantity: number = listedAtTrimmed.indexOf("a ") === 0 || listedAtTrimmed.indexOf("an ") === 0 ? 1 : parseInt(listedAtTrimmed);
+    let dateOffset: number = 0;
     
     if (listedAtTrimmed.indexOf("minute") > -1 ) {
-        dateOffset = listedAtQuantity * miliSecsPerMin;
+        dateOffset = listedAtQuantity * MILLISECONDS_PER_MIN;
     } else if (listedAtTrimmed.indexOf("hour") > -1 ) {
-        dateOffset = listedAtQuantity * miliSecsPerHour;
+        dateOffset = listedAtQuantity * MILLISECONDS_PER_HOUR;
     } else if (listedAtTrimmed.indexOf("day") > -1 ) {
-        dateOffset = listedAtQuantity * miliSecsPerDay;
+        dateOffset = listedAtQuantity * MILLISECONDS_PER_DAY;
     } else if (listedAtTrimmed.indexOf("week") > -1 ) {
-        dateOffset = listedAtQuantity * 7 * miliSecsPerDay;
+        dateOffset = listedAtQuantity * 7 * MILLISECONDS_PER_DAY;
     } else if (listedAtTrimmed.indexOf("month") > -1 ) {
-        dateOffset = listedAtQuantity * 30 * miliSecsPerDay;
+        dateOffset = listedAtQuantity * 30 * MILLISECONDS_PER_DAY;
     } else if (listedAtTrimmed.indexOf("year") > -1 ) {
-        dateOffset = listedAtQuantity * 365 * miliSecsPerDay;
+        dateOffset = listedAtQuantity * 365 * MILLISECONDS_PER_DAY;
     }
-    const myDate = new Date();
-    myDate.setTime(myDate.getTime() - dateOffset);
-    result.postedAt = myDate.toISOString();
+    const postedAt: Date = new Date();
+    postedAt.setTime(postedAt.getTime() - dateOffset);
+    result.postedAt = postedAt.toISOString();
 
     // Condition
     text = await scrapeInnerText('.n99xedck:nth-child(2) > .j83agx80 > .qzhwtbm6 > .d2edcug0 > .d2edcug0');
@@ -83,13 +106,13 @@ const scrapeResult = (page, navigationPromise) => async (url) => {
     text = await scrapeInnerText('.rq0escxv > .rq0escxv > .ii04i59q > div > .d2edcug0');
     result.description = text.trim();
 
-    return result;
+    return result as Result;
 };
 
-export const scrape = (browser, db) => async search => {
+export const scrape = (browser: Browser, db: Client) => async (search: Search): Promise<void> => {
     try {
         // Puppeteer
-        const page = await browser.newPage();
+        const page: Page = await browser.newPage();
         const navigationPromise = page.waitForNavigation();
 
         // Initial State
@@ -104,10 +127,9 @@ export const scrape = (browser, db) => async search => {
         `);
 
         // Infinite Scrolling
-        const waitPeriod = 1000;
-        const noNewResultsCount = 0;
-        const timesScrolled = 0;
-        let resultLinks, newResultLinks = [];
+        let waitPeriod: number = 1000;
+        let noNewResultsCount: number, timesScrolled: number = 0;
+        let resultLinks, newResultLinks: string[] = [];
         
         const prevSearchResults = await db.query("SELECT * FROM searches_fbmarketplace_results WHERE searchId=$1", [search.id]);
 
@@ -146,7 +168,7 @@ export const scrape = (browser, db) => async search => {
 
         for (let resultIndex = 0; resultIndex < resultLinks.length; resultIndex++) {
             try {
-                const result = await scrapeResult(resultLinks[resultIndex], navigationPromise);
+                const result = await scrapeResult(page, navigationPromise)(resultLinks[resultIndex]);
                 // TODO insert into fbmarketplace_results and searches_fbmarketplace_results
                 console.log(resultIndex, result.title);   
             } catch (error) {

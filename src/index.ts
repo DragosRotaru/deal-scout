@@ -1,9 +1,9 @@
 import puppeteer from "puppeteer";
 import Client from 'pg';
+import { MILLISECONDS_PER_DAY, MILLISECONDS_PER_HOUR } from "./utils";
 import { gcsurplus, bunz, kijiji, fbMarketplace } from "./scrapers";
+import { ScraperSettings } from "./types";
 
-const MILLISECONDS_PER_HOUR = 60 * 60 * 1000;
-const MILLISECONDS_PER_DAY = 24 * MILLISECONDS_PER_HOUR;
 
 const scrape = async () => {
     const browser = await puppeteer.launch({ headless: false });
@@ -13,11 +13,11 @@ const scrape = async () => {
     const searches = await client.query("SELECT * FROM searches");
     for (let searchIndex = 0; searchIndex < searches.length; searchIndex++) {
         const search = searches[searchIndex];
-        const createdAt = new Date(search.createdAt);
+        const createdAt = new Date(search.createdAt).getTime();
         const dueDate = new Date().setTime(createdAt + (search.timeLimit * MILLISECONDS_PER_DAY));
         const now = new Date().getTime();
 
-        if (now > dueDate.getTime()) {
+        if (now > dueDate) {
             console.log("due date passed, skipping search:", search.term);
         } else {
             if (now < new Date(search.kijijiLastSearchedAt).getTime() + (search.kijijiFrequency * MILLISECONDS_PER_HOUR)) {
@@ -34,7 +34,7 @@ const scrape = async () => {
     }
 
     const now = new Date().getTime();
-    const settings = {
+    const settings: { [key: string]: ScraperSettings } = {
         bunz: {
             lastSearchedAt: "",
             frequency: 1,
@@ -51,12 +51,12 @@ const scrape = async () => {
     if (now < new Date(settings.bunz.lastSearchedAt).getTime() + (settings.bunz.frequency * MILLISECONDS_PER_HOUR)) {
         console.log("skipping bunz");
     } else {
-        await bunz(client)(settings);
+        await bunz(client)(settings.bunz);
     }
     if (now < new Date(settings.gcsurplus.lastSearchedAt).getTime() + (settings.gcsurplus.frequency * MILLISECONDS_PER_HOUR)) {
         console.log("skipping gc surplus");
     } else {
-        await gcsurplus(browser, client)(settings);
+        await gcsurplus(browser, client)(settings.gcsurplus);
     }
 
     await browser.close();
