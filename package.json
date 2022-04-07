@@ -5,17 +5,19 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node src/index.js"
+    "start": "node -r dotenv/config dist/index.js",
+    "build": "tsc src/index.js --config tsconfig.json"
   },
   "author": "Dragos Rotaru",
   "license": "ISC",
   "dependencies": {
-    "puppeteer": "13.5.2",
     "axios": "0.26.1",
-    "pg": "8.7.3"
+    "pg": "8.7.3",
+    "puppeteer": "13.5.2"
   },
   "devDependencies": {
-    "typescript": "4.6.3",
-    "@types/node": "17.0.23"
+    "@types/node": "17.0.23",
+    "dotenv": "^16.0.0",
+    "typescript": "4.6.3"
   }
 }
