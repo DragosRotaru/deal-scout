@@ -18,11 +18,12 @@ const filterResultLinks = links => [...new Set(links.map(link => link.split("?")
 
 const scrollDown = page => page.evaluate(_ => window.scrollBy(VIEWPORT_HEIGHT, window.innerHeight));
 
-const scrapeResult = page => async (url) => {
+const scrapeResult = (page, navigationPromise) => async (url) => {
     const result = {};
     let text;
     const scrapeInnerText = scrapeInnerTextHOF(page);
     await page.goto(url);
+    await navigationPromise;
 
     // URL
     result.url = url;
@@ -71,7 +72,7 @@ const scrapeResult = page => async (url) => {
     }
     const myDate = new Date();
     myDate.setTime(myDate.getTime() - dateOffset);
-    result.listedAt = myDate.toISOString();
+    result.postedAt = myDate.toISOString();
 
     // Condition
     text = await scrapeInnerText('.n99xedck:nth-child(2) > .j83agx80 > .qzhwtbm6 > .d2edcug0 > .d2edcug0');
@@ -85,8 +86,7 @@ const scrapeResult = page => async (url) => {
     return result;
 };
 
-export const scrape = browser => async (searchTerm, numResultsOverride) => {
-    const results = [];
+export const scrape = (browser, db) => async search => {
     try {
         // Puppeteer
         const page = await browser.newPage();
@@ -96,49 +96,68 @@ export const scrape = browser => async (searchTerm, numResultsOverride) => {
         await navigateToResults(page);
 
         console.log(`Scraping Facebook Marketplace with:\n
-        search term: ${searchTerm}\n
+        search term: ${search.term}\n
+        result limit: ${search.resultLimit}\n
         results per page: unknown\n
         number of results: unknown\n
         number of pages: infinite scroll\n
-        results override: ${numResultsOverride}\n
         `);
 
         // Infinite Scrolling
         const waitPeriod = 1000;
         const noNewResultsCount = 0;
-        let resultLinks = [];
-        let newResultLinks = resultLinks;
+        const timesScrolled = 0;
+        let resultLinks, newResultLinks = [];
+        
+        const prevSearchResults = await db.query("SELECT * FROM searches_fbmarketplace_results WHERE searchId=$1", [search.id]);
 
-        while (resultLinks.length < numResultsOverride && noNewResultsCount < 4 ) {
-            await scrollDown(page);
-            while (newResultLinks.length === resultLinks.length  && noNewResultsCount < 4 ) {
-                await sleep(waitPeriod);
-                newResultLinks = await getResultLinks(page);
-                if (newResultLinks.length === resultLinks.length) {
-                    waitPeriod =+ 200;
-                    noNewResultsCount++;
+        try {
+            loop:
+            while (resultLinks.length < search.resultLimit && noNewResultsCount < 4 && waitPeriod < 30000 ) {
+                await scrollDown(page);
+                timesScrolled++;
+                while (newResultLinks.length === resultLinks.length  && noNewResultsCount < 4 && waitPeriod < 30000 ) {
+                    await sleep(waitPeriod);
+                    newResultLinks = await getResultLinks(page);
+                    if (newResultLinks.length === resultLinks.length) {
+                        waitPeriod =+ 200;
+                        noNewResultsCount++;
+                    };
+                };
+                if (resultLinks.length !== newResultLinks.length) {
+                    noNewResultsCount = 0;
+                    resultLinks = newResultLinks;
+                    if (0) {
+                        // TODO check URLs against prevSearchResults and count how many there are
+                        // Increment search.frequency by * 2 if timesScrolled = 1;
+                        break loop;
+                    }
                 };
             };
-            if (resultLinks.length !== newResultLinks.length) {
-                noNewResultsCount = 0;
-                resultLinks = newResultLinks;
-            };
-        };
+            if (noNewResultsCount >= 4 || waitPeriod > 30000) {
+                console.log(`infinite scroll limits reached, no new results: ${noNewResultsCount}, waitPeriod: ${waitPeriod}, results: ${resultLinks.length}`)
+            }
+        } catch (error) {
+            console.error("failed on indexing via infinite scroll");
+            console.error(error.message);
+        }
 
         resultLinks = filterResultLinks(resultLinks);
 
-        for (let i = 0; i < resultLinks.length; i++) {
-            const link = resultLinks[i];
-            const result = await scrapeResult(link);
-            results.push(result);
+        for (let resultIndex = 0; resultIndex < resultLinks.length; resultIndex++) {
+            try {
+                const result = await scrapeResult(resultLinks[resultIndex], navigationPromise);
+                // TODO insert into fbmarketplace_results and searches_fbmarketplace_results
+                console.log(resultIndex, result.title);   
+            } catch (error) {
+                console.error(`failed on result ${resultIndex}`)
+                console.error(error.message);
+            }
         }
 
-        // Return and Close
+        // TODO update fbmarketplaceLastSearchedAt
         await page.close();
-        return results;
-
     } catch (error) {
-        console.log(error.message);
-        return results;
+        console.error(error.message);
     }
 };

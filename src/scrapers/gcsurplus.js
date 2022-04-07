@@ -69,19 +69,15 @@ const scrapeResult = async page => {
 
     // Current Bid
     text = await scrapeInnerText('#currentBid');
-    result.currentBid = parseFloat(text.trim().replace("$", "").replace(",", ""));
-
-    // Bid Start Date
-    text = await scrapeInnerText('#openBidDt');
-    result.startedAt = text.trim(); // '4-April-2022 @ 02:11:00 pm EDT',
-
-    // Time Remaining
-    text = await scrapeInnerText('#timeRemaining');
-    result.timeRemaining = text.trim(); // '0 minutes 37 seconds',
+    result.oldPrice = parseFloat(text.trim().replace("$", "").replace(",", ""));
 
     // Next Minimum Bid
     text = await scrapeInnerText('#openBidMin');
-    result.nextMinimumBid = parseFloat(text.trim().replace("$", "").replace(",", "")); // 123.43
+    result.price = parseFloat(text.trim().replace("$", "").replace(",", "")); // 123.43    
+
+    // Bid Start Date
+    text = await scrapeInnerText('#openBidDt');
+    result.postedAt = text.trim(); // '4-April-2022 @ 02:11:00 pm EDT',
 
     // Closing Date
     text = await scrapeInnerText('#closingDateId');
@@ -115,14 +111,11 @@ const scrapeResult = async page => {
 };
 
 
-export const scrape = browser => async numPagesOverride => {
-    // Data
-    const results = [];
+export const scrape = (browser, db) => async settings => {
     try {
         // Puppeteer
         const page = await browser.newPage();
         const navigationPromise = page.waitForNavigation();
-
 
         // Initial State
         await navigateToResults(page);
@@ -131,33 +124,55 @@ export const scrape = browser => async numPagesOverride => {
         // Pagination
         const numResults = await getTotalNumResults(page);
         const numPages = Math.ceil(numResults / MAX_RESULTS_PER_PAGE);
-        const scrapeNumPages = numPagesOverride ? numPagesOverride : numPages;
 
         console.log(`Scraping GCSurplus with:\n
+        result limit: ${settings.gcsurplus.resultLimit}\n
         results per page: ${MAX_RESULTS_PER_PAGE}\n
         number of results: ${numResults}\n
         number of pages: ${numPages}\n
-        page override: ${numPagesOverride}\n
         `);
 
+        const previousResults = await db.query("SELECT * FROM gcsurplus_results");
+
         // Iteration
-        for (let pageIndex = 1; pageIndex <= scrapeNumPages ; pageIndex++) {
+        let resultCounter = 0;
+
+        loop:
+        for (let pageIndex = 1; pageIndex <= nunPages ; pageIndex++) {
+
+            /* 
+
+            TODO: grab the IDs of all results on the current page, and compare to the previousResults
+            If there are no new search results, break out of the loop. Additionally, if we are on pageIndex 1,
+            increase the settings.gcsurplus.frequency by * 2;
+            
+            */
+ 
             for (let resultIndex = 1; resultIndex <= MAX_RESULTS_PER_PAGE; resultIndex++) {
-                await navigateToResult(page,navigationPromise)(resultIndex);
-                const result = await scrapeResult(page);
-                results.push(result);
-                console.log(pageIndex, resultIndex, result.title);
-                await page.goBack();
+
+                
+                // exit loops if we have hit the resultLimit
+                if (settings.gcsurplus.resultLimit && settings.gcsurplus.resultLimit <= resultCounter) break loop;
+
+                try {
+                    await navigateToResult(page,navigationPromise)(resultIndex);
+                    const result = await scrapeResult(page);
+                    // TODO INSERT results
+
+                    console.log(pageIndex, resultIndex, result.title);
+                    resultCounter++;
+                    await page.goBack();
+                } catch (error) {
+                    console.error(`failed on page ${pageIndex}, result ${resultIndex}, resultCounter: ${resultCounter}, result id ${result.id}`);
+                    console.error(error.message);
+                }
             }
             await navigateToNextPage(page, navigationPromise);
         }
 
-        // Return and close
+        // TODO update settings.gcsurplus.lastSearchedAt;
         await page.close();
-        return results;
-
     } catch (error) {
-        console.log(error.message);
-        return results; 
+        console.error(error.message);
     }
 }
