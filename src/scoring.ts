@@ -1,8 +1,8 @@
-/* 
+/*
 
 We know generally that deal identification is a function of:
 
-- price 
+- price
 - travel distance
 - qualitative aspects of the item
 - the patience the deal seeker has to find the right deal
@@ -13,22 +13,23 @@ We know generally that deal identification is a function of:
 
 const search = {
     term: "subwoofer",
-    keywords: [ // AND
+    keywords: [
+        // AND
         ['10"', '12"', '14"', '15"', '16"', '18"'], // OR
         ["Brand A", "Brand B", "Brand C"], // OR
     ],
     expectedPrice: {
-        lower: 100 , // dollars
-        upper: 1000 // dollars
+        lower: 100, // dollars
+        upper: 1000, // dollars
     },
     budget: 200, // dollars
     travelBudget: 60, // km
     patience: 10, // weeks
     startedAt: 10, // weeks
-    budgetToDealPreference: 0.5 // 0 - 1
+    budgetToDealPreference: 0.5, // 0 - 1
 };
 
-/* 
+/*
 
 market: [1/0,1/0,1/0,1/0]
 price: [0, inf] where lower is better
@@ -64,14 +65,39 @@ normedTravelBudgetDelta: [0,1] where higher is better
 
 */
 
-const preProcess = (results: any) => results
-    .filter((r: any) => r.search(search.term)) // filter out by search term
-    .filter((r: any) => r.searchAnyOf(search.keywords[0]) && r.searchAnyOf(search.keywords[1])) // filter out by keywords
-    .map((r: any) => ({ ...r, priceInRange: r.price > search.expectedPrice.lower && r.price < search.expectedPrice.upper ? 1 : 0 })) // price is in expected range
-    .map((r: any) => ({ ...r, budgetDelta: -1 * (r.price - search.budget) })) // price distance from budget
-    .map((r: any) => ({ ...r, travelBudgetDelta: -1 * (r.distance - search.travelBudget) })) // travel distance distance from travel budget
-    .map((r: any) => ({ ...r, timeInSearch: (r.foundAt - search.startedAt) / search.patience })); // % of the way through the search
+const preProcess = (results: any) =>
+    results
+        .filter((r: any) => r.search(search.term)) // filter out by search term
+        .filter(
+            (r: any) =>
+                r.searchAnyOf(search.keywords[0]) &&
+                r.searchAnyOf(search.keywords[1])
+        ) // filter out by keywords
+        .map((r: any) => ({
+            ...r,
+            priceInRange:
+                r.price > search.expectedPrice.lower &&
+                r.price < search.expectedPrice.upper
+                    ? 1
+                    : 0,
+        })) // price is in expected range
+        .map((r: any) => ({
+            ...r,
+            budgetDelta: -1 * (r.price - search.budget),
+        })) // price distance from budget
+        .map((r: any) => ({
+            ...r,
+            travelBudgetDelta: -1 * (r.distance - search.travelBudget),
+        })) // travel distance distance from travel budget
+        .map((r: any) => ({
+            ...r,
+            timeInSearch: (r.foundAt - search.startedAt) / search.patience,
+        })); // % of the way through the search
 
-
-const normalize = (results: any) => results
-    .map((r: any) => ({ ...r, normedPriceInRange: r.priceInRange / results.filter((r: any) => r.priceInRange === 1).length })) // how exceptional is it that it is in range?
+const normalize = (results: any) =>
+    results.map((r: any) => ({
+        ...r,
+        normedPriceInRange:
+            r.priceInRange /
+            results.filter((r: any) => r.priceInRange === 1).length,
+    })); // how exceptional is it that it is in range?

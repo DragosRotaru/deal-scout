@@ -75,7 +75,7 @@ export const scrape = (db: Client) => async (settings: ScraperSettings): Promise
     try {
         let timesLoaded: number = 0;
         let resultCount: number = 0;
-        
+
         let response = await requestResults("initial", timesLoaded);
         resultCount = response.items.length;
 
@@ -90,7 +90,7 @@ export const scrape = (db: Client) => async (settings: ScraperSettings): Promise
         }
 
         await insertIntoDB(db)(response);
-        
+
         // Pagination
         const numResults: number = response.count;
         const numPages: number = Math.ceil(numResults / MAX_RESULTS_PER_PAGE);
@@ -103,16 +103,18 @@ export const scrape = (db: Client) => async (settings: ScraperSettings): Promise
         `);
 
         // Iteration
-        loop:
-        while (response.isMore && response.error === 0) {
-            if (settings.resultLimit && settings.resultLimit <= resultCount) break loop;   
+        loop: while (response.isMore && response.error === 0) {
+            if (settings.resultLimit && settings.resultLimit <= resultCount)
+                break loop;
             sleep(SLEEP_TIME);
             response = await requestResults(response.cursor, timesLoaded);
-            
+
             timesLoaded++;
             resultCount += response.items.length;
-            
-            console.log(`Times Loaded: ${timesLoaded}, Result Count: ${resultCount}, Response.isMore: ${response.isMore}, Response.error: ${response.error}, Response.cursor: ${response.cursor}`);
+
+            console.log(
+                `Times Loaded: ${timesLoaded}, Result Count: ${resultCount}, Response.isMore: ${response.isMore}, Response.error: ${response.error}, Response.cursor: ${response.cursor}`
+            );
             await insertIntoDB(db)(response);
         }
         settings.lastSearchedAt = new Date().toISOString();
